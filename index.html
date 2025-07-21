@@ -1195,6 +1195,121 @@
         let invoices = [];
         let menuItems = [];
         let menuDetails = {};
+        // --- Tambahkan di sini ---
+        const defaultMenuSeed = [
+            {id:"package_payalur_bakwan", type:"package", name:"PAYALUR", desc:"Nasi Putih dan Ayam Goreng + Telur Balado + Bakwan Sayur + Sayur dan Sambal", price:35},
+            {id:"package_payalur_kentang", type:"package", name:"PAYALUR", desc:"Nasi Putih dan Ayam Goreng + Telur Balado + Kentang Balado + Sayur dan Sambal", price:35},
+            {id:"package_payalit_telur", type:"package", name:"PAYALIT", desc:"Nasi Putih dan Ayam Goreng + Telur + Sayur dan Sambal", price:30},
+            {id:"package_payalit_bakwan", type:"package", name:"PAYALIT", desc:"Nasi Putih dan Ayam Goreng + Bakwan Sayur + Sayur dan Sambal", price:30},
+            {id:"package_payamat", type:"package", name:"PAYAMAT", desc:"Nasi Putih dan Ayam Goreng + Sayur dan Sambal", price:25},
+            {id:"package_palutang", type:"package", name:"PALUTANG", desc:"Nasi Putih dan Telur Balado + Kentang Balado + Bakwan Sayur + Sayur", price:25},
+            {id:"package_palur", type:"package", name:"PALUR", desc:"Nasi Putih dan Telur Balado + Bakwan Sayur + Sayur", price:20},
+            {id:"package_prames_a", type:"package", name:"PRAMES A", desc:"Nasi Putih + Ayam Goreng + Tahu + Timun + Sambal + Kremesan", price:25},
+            {id:"package_prames_b", type:"package", name:"PRAMES B", desc:"Nasi Putih + Ayam Goreng + Telur Balado + Tahu + Timun + Sambal + Kremesan", price:33},
+            {id:"package_prames_c", type:"package", name:"PRAMES C", desc:"Nasi Putih + Ayam Goreng + Kentang Balado + Tahu + Timun + Sambal + Kremesan", price:30},
+            {id:"package_prames_veggie", type:"package", name:"PRAMES VEGGIE", desc:"Nasi Putih + Tahu + Timun + Sambal + Kremesan", price:15},
+            {id:"alacarte_ayam_goreng", type:"alacarte", name:"Ayam Goreng", desc:"Ala Carte", price:15},
+            {id:"alacarte_telur_balado", type:"alacarte", name:"Telur Balado", desc:"Ala Carte", price:10},
+            {id:"alacarte_bakwan_sayur", type:"alacarte", name:"Bakwan Sayur", desc:"Ala Carte", price:5},
+            {id:"alacarte_kentang_balado", type:"alacarte", name:"Kentang Balado", desc:"Ala Carte", price:10},
+            {id:"alacarte_tahu", type:"alacarte", name:"Tahu", desc:"Ala Carte", price:5},
+        ];
+        
+        const menuDetails = {
+            'PAYALUR BAKWAN': [
+                'Nasi Putih',
+                'Ayam Goreng',
+                'Telur Balado',
+                'Bakwan Sayur atau Kentang Balado',
+                'Sayur',
+                'Sambal'
+            ],
+            'PAYALUR KENTANG': [
+                'Nasi Putih',
+                'Ayam Goreng',
+                'Telur Balado',
+                'Kentang Balado',
+                'Sayur',
+                'Sambal'
+            ],
+            'PAYALIT TELUR': [
+                'Nasi Putih',
+                'Ayam Goreng',
+                'Telur Balado',
+                'Sayur',
+                'Sambal'
+            ],
+            'PAYALIT BAKWAN': [
+                'Nasi Putih',
+                'Ayam Goreng',
+                'Bakwan Sayur',
+                'Sayur',
+                'Sambal'
+            ],
+            'PAYAMAT': [
+                'Nasi Putih',
+                'Ayam Goreng',
+                'Sayur',
+                'Sambal'
+            ],
+            'PALUTANG': [
+                'Nasi Putih',
+                'Telur Balado',
+                'Kentang Balado',
+                'Bakwan Sayur',
+                'Sayur'
+            ],
+            'PALUR': [
+                'Nasi Putih',
+                'Telur Balado',
+                'Bakwan Sayur',
+                'Sayur'
+            ],
+            'PRAMES A': [
+                'Nasi Putih',
+                'Ayam Goreng',
+                'Tahu',
+                'Timun',
+                'Sambal',
+                'Kremesan'
+            ],
+            'PRAMES B': [
+                'Nasi Putih',
+                'Ayam Goreng',
+                'Telur Balado',
+                'Tahu',
+                'Timun',
+                'Sambal',
+                'Kremesan'
+            ],
+            'PRAMES C': [
+                'Nasi Putih',
+                'Ayam Goreng',
+                'Kentang Balado',
+                'Tahu',
+                'Timun',
+                'Sambal',
+                'Kremesan'
+            ],
+            'PRAMES VEGGIE': [
+                'Nasi Putih',
+                'Tahu',
+                'Timun',
+                'Sambal',
+                'Kremesan'
+            ]
+        };
+        async function seedMenuIfNeeded() {
+            const snap = await db.collection('menu').get();
+            if (snap.empty) {
+                for (const mi of defaultMenuSeed) {
+                    await db.collection('menu').doc(mi.id).set(mi);
+                }
+                showNotification("Menu default berhasil di-seed! Silakan refresh di device lain.", 3000, "success");
+            }
+        }
+        seedMenuIfNeeded();
+        
         let telegramSentIds = new Set();
         let menuEditId = null;
         let editOrderMode = false;
@@ -2043,9 +2158,88 @@
         function setupFirebaseListeners() {
             // Initialize default menu details
             menuDetails = {
-                "Paket Nasi Kuning": ["Nasi Kuning", "Ayam Goreng", "Sambal", "Kerupuk", "Lalapan"],
-                "Paket Nasi Putih": ["Nasi Putih", "Rendang", "Sayur", "Kerupuk", "Sambal"],
-                "Paket Gudeg": ["Nasi Putih", "Gudeg", "Opor Ayam", "Sambal Krecek", "Kerupuk"]
+                'PAYALUR BAKWAN': [
+                    'Nasi Putih',
+                    'Ayam Goreng',
+                    'Telur Balado',
+                    'Bakwan Sayur atau Kentang Balado',
+                    'Sayur',
+                    'Sambal'
+                ],
+                'PAYALUR KENTANG': [
+                    'Nasi Putih',
+                    'Ayam Goreng',
+                    'Telur Balado',
+                    'Kentang Balado',
+                    'Sayur',
+                    'Sambal'
+                ],
+                'PAYALIT TELUR': [
+                    'Nasi Putih',
+                    'Ayam Goreng',
+                    'Telur Balado',
+                    'Sayur',
+                    'Sambal'
+                ],
+                'PAYALIT BAKWAN': [
+                    'Nasi Putih',
+                    'Ayam Goreng',
+                    'Bakwan Sayur',
+                    'Sayur',
+                    'Sambal'
+                ],
+                'PAYAMAT': [
+                    'Nasi Putih',
+                    'Ayam Goreng',
+                    'Sayur',
+                    'Sambal'
+                ],
+                'PALUTANG': [
+                    'Nasi Putih',
+                    'Telur Balado',
+                    'Kentang Balado',
+                    'Bakwan Sayur',
+                    'Sayur'
+                ],
+                'PALUR': [
+                    'Nasi Putih',
+                    'Telur Balado',
+                    'Bakwan Sayur',
+                    'Sayur'
+                ],
+                'PRAMES A': [
+                    'Nasi Putih',
+                    'Ayam Goreng',
+                    'Tahu',
+                    'Timun',
+                    'Sambal',
+                    'Kremesan'
+                ],
+                'PRAMES B': [
+                    'Nasi Putih',
+                    'Ayam Goreng',
+                    'Telur Balado',
+                    'Tahu',
+                    'Timun',
+                    'Sambal',
+                    'Kremesan'
+                ],
+                'PRAMES C': [
+                    'Nasi Putih',
+                    'Ayam Goreng',
+                    'Kentang Balado',
+                    'Tahu',
+                    'Timun',
+                    'Sambal',
+                    'Kremesan'
+                ],
+                'PRAMES VEGGIE': [
+                    'Nasi Putih',
+                    'Tahu',
+                    'Timun',
+                    'Sambal',
+                    'Kremesan'
+                ]
             };
 
             db.collection('menu').onSnapshot(snap => {
