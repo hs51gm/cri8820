@@ -1682,15 +1682,20 @@
         window.handleKitchenAction = async function(orderId, newStatus, btn) {
             btn.classList.add('pop');
             setTimeout(()=>btn.classList.remove('pop'), 370);
-            
+        
             let updateObj = { status: newStatus };
             updateObj[`${newStatus.toLowerCase()}At`] = firebase.firestore.FieldValue.serverTimestamp();
-            
+        
             if (newStatus === 'Completed') {
                 updateObj.completedAt = firebase.firestore.FieldValue.serverTimestamp();
                 generateInvoice(orderId);
             }
-            
+        
+            // === Tambahkan di sini! ===
+            if (newStatus === 'Ready') {
+                sendTelegram(orderId);
+            }
+        
             await db.collection('orders').doc(orderId).update(updateObj);
             showNotification(`Order ${orderId} status updated to ${newStatus}`, 2000, 'success');
         };
@@ -1799,6 +1804,51 @@
             db.collection('invoices').doc(invoiceId).set(invoice);
             invoices.unshift(invoice);
             renderInvoicesTable();
+        }
+
+        function sendTelegram(orderId) {
+            if (telegramSentIds.has(orderId)) return;
+            const ord = orders.find(o => o.id === orderId);
+            if (!ord) return;
+            let msg = '👋🏻 Siap Diantar 👋🏻\n\n';
+            msg += `Orderan #${ord.id}\n\n`;
+            msg += `Nama Customer: ${ord.customer}\nLocation: ${ord.deliveryLocation}\nDelivery Time: ${formatDateTime(ord.deliveryTime)}\n\n`;
+            msg += `Order:\n`;
+            for (const pkg of ord.packages || []) {
+                const mi = menuItems.find(m => m.id === pkg.menuId);
+                if (mi) {
+                    msg += `- ${mi.name} x${pkg.qty}\n`;
+                    if (menuDetails[mi.name]) {
+                        for (const detail of menuDetails[mi.name]) {
+                            msg += `   • ${detail}\n`;
+                        }
+                    }
+                }
+            }
+            for (const ac of ord.alacarte || []) {
+                const mi = menuItems.find(m => m.id === ac.menuId);
+                if (mi) {
+                    msg += `- ${mi.name} x${ac.qty}\n`;
+                }
+            }
+            msg += `Notes: ${ord.notes || '-'}\n\n`;
+            msg += `Total: ¥${calcOrderTotal(ord)}\n`;
+            const botToken = "7977280306:AAFG8qAVnSD81p73iFP3wRceOP-605auqQ0";
+            const chatId = "-1002880911209";
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `chat_id=${encodeURIComponent(chatId)}&text=${encodeURIComponent(msg)}`
+            }).then(r=>r.json()).then(data=>{
+                if (data.ok) {
+                    telegramSentIds.add(orderId);
+                    showNotification('Pesan Telegram sukses!', 2000, 'success');
+                } else {
+                    showNotification('Gagal kirim Telegram: ' + JSON.stringify(data), 2500, 'error');
+                }
+            }).catch(e=>{
+                showNotification('Gagal kirim Telegram: ' + e.message, 2500, 'error');
+            });
         }
 
         window.downloadInvoicePdf = function(orderId) {
