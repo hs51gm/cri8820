@@ -1682,20 +1682,20 @@
         window.handleKitchenAction = async function(orderId, newStatus, btn) {
             btn.classList.add('pop');
             setTimeout(()=>btn.classList.remove('pop'), 370);
-        
+            
             let updateObj = { status: newStatus };
             updateObj[`${newStatus.toLowerCase()}At`] = firebase.firestore.FieldValue.serverTimestamp();
-        
+            
             if (newStatus === 'Completed') {
                 updateObj.completedAt = firebase.firestore.FieldValue.serverTimestamp();
                 generateInvoice(orderId);
             }
         
-            // === Tambahkan di sini! ===
+            // Tambahkan di sini!
             if (newStatus === 'Ready') {
                 sendTelegram(orderId);
             }
-        
+            
             await db.collection('orders').doc(orderId).update(updateObj);
             showNotification(`Order ${orderId} status updated to ${newStatus}`, 2000, 'success');
         };
@@ -1806,6 +1806,7 @@
             renderInvoicesTable();
         }
 
+        // Tambahkan fungsi ini di bawah generateInvoice
         function sendTelegram(orderId) {
             if (telegramSentIds.has(orderId)) return;
             const ord = orders.find(o => o.id === orderId);
